@@ -1,3 +1,4 @@
+from numpy import fix
 import streamlit as st
 import pandas as pd
 from plotly import express as px
@@ -101,11 +102,10 @@ if os.path.exists(csv_path):
                 'num': st.sidebar.checkbox('Número de voos'),
                 'dist': st.sidebar.checkbox('Distância média'),
                 'delay': st.sidebar.checkbox('Atraso médio'),
-                'cancel': st.sidebar.checkbox('Cancelamentos')
-                # TODO: Voos vs atraso médio por companhia
-
+                'cancel': st.sidebar.checkbox('Cancelamentos'),
+                'voos_vs_delay': st.sidebar.checkbox('Atraso médio vs N° de voos')
             }
-
+            
             voos_por_companhia = df['Airline'].value_counts().reset_index().rename(
                 columns={'count': 'TotalVoos'}).sort_values('TotalVoos')
 
@@ -159,6 +159,35 @@ if os.path.exists(csv_path):
                     x='VoosCanceladosPct', y='Airline',
                     orientation='h', color_discrete_sequence=[COLORS['cancel']],
                 ))
+            if metricas['voos_vs_delay']:
+                st.subheader('Atraso médio com relação ao número de voos (Top 10 companhias)')
+
+                df_voos_delay = df.groupby('Airline').agg({
+                    'ArrDelay': 'mean'
+                }).rename(columns={'ArrDelay': 'AtrasoMedio'}).reset_index()
+
+                df_voos_delay['NumVoos'] = df['Airline'].value_counts().reindex(df_voos_delay['Airline']).values
+
+                df_voos_delay_top10 = df_voos_delay.nlargest(10, 'NumVoos')
+
+                fig = px.scatter(
+                    df_voos_delay_top10,
+                    x='NumVoos',
+                    y='AtrasoMedio',
+                    text='Airline',
+                    size='NumVoos',
+                    color_discrete_sequence=[COLORS['delay']],
+                    labels={
+                        'NumVoos': 'Número de voos',
+                        'AtrasoMedio': 'Atraso médio (min)',
+                        'Airline': 'Companhia'
+                    },
+                    title='Top 10 companhias: Nº de voos vs Atraso médio'
+                )
+                fig.update_traces(textposition='top center')
+                fig.update_layout(height=500)
+                st.plotly_chart(fig, use_container_width=True)
+
 
         case "Geográfica":
             st.sidebar.subheader('Selecione métricas de análise')
@@ -166,8 +195,8 @@ if os.path.exists(csv_path):
             metricas = {
                 'faixas': st.sidebar.checkbox('Relação atraso e distância'),
                 'cidades-companhias': st.sidebar.checkbox('Principais cidades por companhia'),
-                # TODO: Voos vs atraso médio por cidade
-                # TODO: top cidades com mais atrasos
+                'voos_vs_delay_city': st.sidebar.checkbox('Relação entre atraso e número de voos'),
+                'city-delay': st.sidebar.checkbox('Principais cidades por atrasos'),
             }
 
             if metricas['faixas']:
@@ -194,6 +223,57 @@ if os.path.exists(csv_path):
                     labels={'DestCityName': 'Cidade', 'count': f'Voos da "{comp}" com destino a esta cidade'},
                     x='count',
                     orientation='h', color_discrete_sequence=[COLORS['number']],
+                ))
+            
+            if metricas['voos_vs_delay_city']:
+                st.subheader('Relação entre número de voos e atraso médio por cidade de destino')
+
+                df_voos_delay_cidade = df.groupby('DestCityName').agg({
+                    'ArrDelay': 'mean',
+                    'Airline': 'count'  
+                }).rename(columns={
+                    'ArrDelay': 'AtrasoMedio',
+                    'Airline': 'NumVoos'
+                }).reset_index()
+
+                df_voos_delay_cidade_top = df_voos_delay_cidade.nlargest(15, 'NumVoos')
+
+                _chart_hbar(px.scatter(
+                    df_voos_delay_cidade_top,
+                    x='NumVoos',
+                    y='AtrasoMedio',
+                    size='NumVoos',
+                    text='DestCityName',
+                    color_discrete_sequence=[COLORS['delay']],
+                    labels={
+                        'NumVoos': 'Número de voos',
+                        'AtrasoMedio': 'Atraso médio [min]',
+                        'DestCityName': 'Cidade de destino'
+                    },
+                    title='Relação entre número de voos e atraso médio por cidade'
+                ))
+                
+            if metricas['city-delay']:
+                st.subheader('Top 10 cidades com maiores atrasos médios de chegada')
+
+                df_city_delay = (df.groupby('DestCityName')['ArrDelay']
+                                .mean()
+                                .sort_values(ascending=False)
+                                .head(10)
+                                .reset_index()
+                                .rename(columns={'ArrDelay': 'AtrasoMedio'}))
+
+                _chart_hbar(px.bar(
+                    data_frame=df_city_delay.sort_values(by='AtrasoMedio'),  # menor para cima
+                    x='AtrasoMedio',
+                    y='DestCityName',
+                    orientation='h',
+                    color_discrete_sequence=[COLORS['delay']],
+                    labels={
+                        'DestCityName': 'Cidade de destino',
+                        'AtrasoMedio': 'Atraso médio [min]'
+                    },
+                    title='Top 10 cidades com maiores atrasos médios'
                 ))
 
         case 'Temporal':
