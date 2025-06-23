@@ -34,21 +34,25 @@ opcao = st.sidebar.radio("Selecione um tópico de análise:", [
 
 # --- Carregar dados ---
 data_dir = 'data'
-csv_path = os.path.join(data_dir, 'reduced2019.csv')
+parquet_path = 'data/Combined_Flights_2019.parquet'
 
 @st.cache_data
 def carregar_dados(path):
-    df_raw = pd.read_csv(path, usecols=[
-        "Airline", 'Cancelled', "ArrDelay", "OriginCityName", "DestCityName",
-        'Distance', 'Month', 'DayofMonth', 'DayOfWeek', 'ArrTime'])
-    df_raw.rename(columns={'DayofMonth': 'DayOfMonth'}, inplace=True)
-    df_raw.dropna(subset=["Airline"], inplace=True)
-    df_raw.dropna(subset=["OriginCityName"], inplace=True)
-    df_raw.dropna(subset=["DestCityName"], inplace=True)
-    df_raw.dropna(subset=["Distance"], inplace=True)
-    df_raw.fillna(0, inplace=True)
-    return df_raw
+    df_raw = pd.read_parquet(path)
 
+    # Se necessário, selecione apenas as colunas desejadas
+    colunas_necessarias = [
+        "Airline", "Cancelled", "ArrDelay", "OriginCityName", "DestCityName",
+        "Distance", "Month", "DayofMonth", "DayOfWeek", "ArrTime"
+    ]
+    df_raw = df_raw[colunas_necessarias]
+
+    # Ajustes para manter compatibilidade com o restante do código
+    df_raw.rename(columns={'DayofMonth': 'DayOfMonth'}, inplace=True)
+    df_raw.dropna(subset=["Airline", "OriginCityName", "DestCityName", "Distance"], inplace=True)
+    df_raw.fillna(0, inplace=True)
+
+    return df_raw
 
 def format_number(number):
     if int(number) != number:
@@ -73,8 +77,8 @@ def _chart_bar(fig):
     st.plotly_chart(fig)
 
 
-if os.path.exists(csv_path):
-    df = carregar_dados(csv_path)
+if os.path.exists(parquet_path):
+    df = carregar_dados(parquet_path)
 
     # --- Exibir visualizações conforme opção escolhida ---
     match opcao:
