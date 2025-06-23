@@ -343,4 +343,4 @@ if os.path.exists(parquet_path):
                     ))
 
 else:
-    st.error("Arquivo de dados 'reduced2019.csv' não encontrado.")
+    st.error("Arquivo de dados 'Combined_Flights_2019.parquet' não encontrado.")
