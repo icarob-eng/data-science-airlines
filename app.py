@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from plotly import express as px
+import zipfile
 import os
 
 COLORS = {
@@ -53,7 +54,8 @@ def carregar_dados(path):
 
         api.dataset_download_file(dataset, path='data', file_name=file)
 
-        st.text(os.listdir('data'))
+        with zipfile.ZipFile(path + '.zip', 'r') as zip_ref:
+            zip_ref.extractall('data')
 
         df_raw = pd.read_parquet(path)
 
