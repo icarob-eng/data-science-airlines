@@ -38,9 +38,9 @@ parquet_path = 'data/Combined_Flights_2019.parquet'
 @st.cache_data
 def carregar_dados(path):
     os.makedirs('data', exist_ok=True)
-    try:
+    if 'Combined_Flights_2019.parquet' in os.listdir('data'):
         df_raw = pd.read_parquet(path)
-    except Exception:
+    else:
         dataset = 'robikscube/flight-delay-dataset-20182022'
         file = 'Combined_Flights_2019.parquet'
 
@@ -54,8 +54,11 @@ def carregar_dados(path):
 
         api.dataset_download_file(dataset, path='data', file_name=file)
 
+        os.rename(path, path + '.zip')
         with zipfile.ZipFile(path + '.zip', 'r') as zip_ref:
             zip_ref.extractall('data')
+
+        os.remove(path + '.zip')
 
         df_raw = pd.read_parquet(path)
 
