@@ -40,7 +40,7 @@ parquet_path = 'data/Combined_Flights_2019.parquet'
 def carregar_dados(path):
     try:
         df_raw = pd.read_parquet(path)
-    except FileNotFoundError:
+    except Exception:
         dataset = 'robikscube/flight-delay-dataset-20182022'
         file = 'Combined_Flights_2019.parquet'
 
