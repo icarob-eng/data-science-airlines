@@ -33,48 +33,14 @@ opcao = st.sidebar.radio("Selecione um tópico de análise:", [
 ])
 
 # --- Carregar dados ---
-parquet_path = 'data/Combined_Flights_2019.parquet'
+parquet_path = 'data/reduced_Combined_Flights_2019.parquet'
 
 @st.cache_data
 def carregar_dados(path):
-    os.makedirs('data', exist_ok=True)
-    if 'Combined_Flights_2019.parquet' in os.listdir('data'):
-        df_raw = pd.read_parquet(path)
-    else:
-        dataset = 'robikscube/flight-delay-dataset-20182022'
-        file = 'Combined_Flights_2019.parquet'
-
-        os.environ['KAGGLE_USERNAME'] = st.secrets["kaggle_username"]
-        os.environ['KAGGLE_KEY'] = st.secrets["kaggle_key"]
-
-        from kaggle.api.kaggle_api_extended import KaggleApi
-
-        api = KaggleApi()
-        api.authenticate()
-
-        api.dataset_download_file(dataset, path='data', file_name=file)
-
-        os.rename(path, path + '.zip')
-        with zipfile.ZipFile(path + '.zip', 'r') as zip_ref:
-            zip_ref.extractall('data')
-
-        os.remove(path + '.zip')
-
-        df_raw = pd.read_parquet(path)
-
-    # Se necessário, selecione apenas as colunas desejadas
-    colunas_necessarias = [
-        "Airline", "Cancelled", "ArrDelay", "OriginCityName", "DestCityName",
-        "Distance", "Month", "DayofMonth", "DayOfWeek", "ArrTime"
-    ]
-    df_raw = df_raw[colunas_necessarias]
-
-    # Ajustes para manter compatibilidade com o restante do código
-    df_raw.rename(columns={'DayofMonth': 'DayOfMonth'}, inplace=True)
-    df_raw.dropna(subset=["Airline", "OriginCityName", "DestCityName", "Distance"], inplace=True)
-    df_raw.fillna(0, inplace=True)
-
-    return df_raw
+    try:
+        return pd.read_parquet(path)
+    except Exception:
+        return st.error("Erro ao carregar dados.")
 
 def format_number(number):
     if int(number) != number:
