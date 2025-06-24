@@ -1,12 +1,19 @@
 import streamlit as st
-import polars as pl
+import pandas as pd
 from plotly import express as px
+import zipfile
+import os
 
 COLORS = {
     'number': "#AEC6CF",
     'delay': "#FFB347",
     'dist': "#77DD77",
     'cancel': "#FF6961",
+    # 'gray': "#CFCFC4",  # cores não usadas
+    # 'purple': "#B39EB5",
+    # 'pink': "#FFD1DC",
+    # 'yellow': "#FDFD96",
+    # 'lavender': "#CB99C9"
 }
 
 # --- Configuração da página ---
@@ -31,8 +38,7 @@ parquet_path = 'data/reduced_Combined_Flights_2019.parquet'
 @st.cache_data
 def carregar_dados(path):
     try:
-        # Polars: Usamos pl.read_parquet para ler os dados.
-        return pl.read_parquet(path)
+        return pd.read_parquet(path)
     except Exception:
         return st.error("Erro ao carregar dados.")
 
@@ -69,18 +75,14 @@ match opcao:
         st.text('Dataset em números:')
         cols = st.columns(3)
         with cols[0]:
-            # Polars: Usamos .n_unique() para contar valores únicos.
-            st.metric('Linhas aéreas', df.n_unique('Airline'))
+            st.metric('Linhas aéreas', len(df['Airline'].unique()), border=True)
         with cols[1]:
-            st.metric('Cidades', df.n_unique('DestCityName'))
+            st.metric('Cidades', len(df['DestCityName'].unique()), border=True)
         with cols[2]:
-            # Polars: .height é o equivalente a len(df) e é mais idiomático.
-            st.metric('Total de voos', format_number(df.height))
+            st.metric('Total de voos', format_number(len(df)), border=True)
 
         st.text('10 voos aleatórios:')
-        # Polars: .sample(n=10) é a sintaxe para amostragem.
-        st.dataframe(df.sample(n=10))
-        # Polars: .describe() funciona de forma similar ao pandas.
+        st.dataframe(df.sample(10))
         st.write(df.describe())
 
     case "Por linhas aéreas":
@@ -94,67 +96,55 @@ match opcao:
             'voos_vs_delay': st.sidebar.checkbox('Atraso médio vs N° de voos')
         }
 
-        # Polars: value_counts() já retorna um DataFrame ordenado.
-        voos_por_companhia = df.get_column('Airline').value_counts().rename(
-            {'count': 'TotalVoos'})
+        voos_por_companhia = df['Airline'].value_counts().reset_index().rename(
+            columns={'count': 'TotalVoos'}).sort_values('TotalVoos')
 
         if metricas['num']:
             st.subheader('Ranking de companhias aéreas:')
-            # Polars: .sort() é usado para ordenação. Plotly Express aceita DataFrames Polars.
             _chart_hbar(px.bar(
-                data_frame=voos_por_companhia.sort('TotalVoos'),
+                data_frame=voos_por_companhia,
                 labels={'Airline': 'Linha aérea', 'TotalVoos': 'Número de voos'},
                 x='TotalVoos', y='Airline',
                 orientation='h', color_discrete_sequence=[COLORS['number']],
             ))
         if metricas['dist']:
             st.subheader('Companhias aéreas com rotas mais longas:')
-            # Polars: A sintaxe de group_by e agg com expressões (pl.col).
-            dist_media = df.group_by('Airline').agg(
-                pl.col('Distance').mean()
-            ).sort('Distance')
+
             _chart_hbar(px.bar(
-                data_frame=dist_media,
+                data_frame=df.groupby('Airline')['Distance'].mean().sort_values(),
                 labels={'Airline': 'Linha aérea', 'Distance': 'Distância média [milhas]'},
-                x='Distance', y='Airline',
+                x='Distance',
                 orientation='h', color_discrete_sequence=[COLORS['dist']],
             ))
         if metricas['delay']:
             st.subheader('Atraso médio de chegada por companhia:')
-            delay_medio = df.group_by('Airline').agg(
-                pl.col('ArrDelay').mean()
-            ).sort('ArrDelay')
+
             _chart_hbar(px.bar(
-                data_frame=delay_medio,
+                data_frame=df.groupby('Airline')['ArrDelay'].mean().sort_values(),
                 labels={'Airline': 'Linha aérea', 'ArrDelay': 'Atraso médio [min]'},
-                x='ArrDelay', y='Airline',
+                x='ArrDelay',
                 orientation='h', color_discrete_sequence=[COLORS['delay']],
             ))
         if metricas['cancel']:
             st.subheader('Companhias aéreas que mais cancelam:')
 
-            # Polars: Filtramos primeiro e depois contamos.
-            cancel_counts = (df.filter(pl.col('Cancelled') == True)
-                             .get_column('Airline')
+            cancel_counts = (df[df['Cancelled'] == True]['Airline']
                              .value_counts()
-                             .rename({'count': 'VoosCancelados'}))
-
-            # Polars: Para calcular a %, usamos um JOIN para combinar os totais com os cancelamentos.
-            # Esta é a forma correta e performática no Polars.
-            cancel_stats = voos_por_companhia.join(cancel_counts, on='Airline', how='left').with_columns(
-                (pl.col('VoosCancelados') / pl.col('TotalVoos') * 100).alias('VoosCanceladosPct')
-            ).fill_null(0) # Preenche com 0 companhias que não tiveram cancelamentos
+                             .reset_index()
+                             .rename(columns={'count': 'VoosCancelados'}))
+            cancel_counts['VoosCanceladosPct'] = cancel_counts['VoosCancelados'] / \
+                                                             voos_por_companhia['TotalVoos'] * 100
 
             cols = st.columns(2)
             with cols[0]:
                 st.metric('Total de voos cancelados nos EUA no ano de 2019',
-                          value=format_number(cancel_stats.get_column('VoosCancelados').sum()))
+                          value=format_number(cancel_counts['VoosCancelados'].sum()), border=True)
             with cols[1]:
                 st.metric('Cancelamentos a cada 100 voos',
-                          value=format_number(cancel_stats.get_column('VoosCanceladosPct').sum()))
+                          value=format_number(cancel_counts['VoosCanceladosPct'].sum()))
 
             _chart_hbar(px.bar(
-                data_frame=cancel_stats.sort(by='VoosCanceladosPct'),
+                data_frame=cancel_counts.sort_values(by='VoosCanceladosPct'),
                 labels={'Airline': 'Linha aérea', 'VoosCanceladosPct': 'Cancelamentos a cada 100 voos'},
                 x='VoosCanceladosPct', y='Airline',
                 orientation='h', color_discrete_sequence=[COLORS['cancel']],
@@ -162,25 +152,23 @@ match opcao:
         if metricas['voos_vs_delay']:
             st.subheader('Atraso médio com relação ao número de voos (Top 10 companhias)')
 
-            # Polars: Combinamos a contagem de voos com a média de atraso usando um JOIN.
-            df_voos_delay = (
-                df.group_by('Airline')
-                  .agg(pl.col('ArrDelay').mean().alias('AtrasoMedio'))
-                  .join(voos_por_companhia, on='Airline')
-            )
+            df_voos_delay = df.groupby('Airline').agg({
+                'ArrDelay': 'mean'
+            }).rename(columns={'ArrDelay': 'AtrasoMedio'}).reset_index()
 
-            # Polars: Usamos top_k() para pegar os maiores valores.
-            df_voos_delay_top10 = df_voos_delay.top_k(10, by='TotalVoos')
+            df_voos_delay['NumVoos'] = df['Airline'].value_counts().reindex(df_voos_delay['Airline']).values
+
+            df_voos_delay_top10 = df_voos_delay.nlargest(10, 'NumVoos')
 
             fig = px.scatter(
                 df_voos_delay_top10,
-                x='TotalVoos',
+                x='NumVoos',
                 y='AtrasoMedio',
                 text='Airline',
-                size='TotalVoos',
+                size='NumVoos',
                 color_discrete_sequence=[COLORS['delay']],
                 labels={
-                    'TotalVoos': 'Número de voos',
+                    'NumVoos': 'Número de voos',
                     'AtrasoMedio': 'Atraso médio (min)',
                     'Airline': 'Companhia'
                 },
@@ -207,51 +195,40 @@ match opcao:
             labels = ['0–250', '251–500', '501–750', '751–1000', '1001–1250', '1251–1500',
                       '1501–2000', '2001–3000', '3001–4000', '4001–5000']
 
-            # Polars: .cut() cria as faixas. O groupby é feito na coluna recém-criada.
-            df_faixas = df.with_columns(
-                pl.col('Distance').cut(bins=bins, labels=labels).alias('FaixaDistancia')
-            )
-            atraso_por_faixa = df_faixas.group_by('FaixaDistancia').agg(
-                pl.col('ArrDelay').mean()
-            )
+            df['FaixaDistancia'] = pd.cut(df['Distance'], bins=bins, labels=labels)
 
             _chart_bar(px.bar(
-                data_frame=atraso_por_faixa,
+                data_frame=df.groupby('FaixaDistancia', observed=False)['ArrDelay'].mean().reset_index(),
                 labels={'FaixaDistancia': 'Faixa de distância [milhas]', 'ArrDelay': 'Atraso de chegada [min]'},
                 x='FaixaDistancia', y='ArrDelay', color_discrete_sequence=[COLORS['delay']],
             ))
 
+
         if metricas['cidades-companhias']:
             st.subheader('Top 10 cidades destino por companhia')
-            # Polars: .unique().to_list() para popular o selectbox.
-            comp = st.selectbox('Companhia:', options=sorted(df.get_column('Airline').unique().to_list()))
-
-            cidades_por_comp = (
-                df.filter(pl.col('Airline') == comp)
-                  .get_column('DestCityName')
-                  .value_counts()
-                  .sort('count') # .value_counts() do pandas tem `ascending`, aqui usamos sort.
-                  .tail(10) # .tail(10) para pegar os 10 maiores (pois ordenamos crescente)
-            )
+            comp = st.selectbox('Companhia:', options=sorted(df['Airline'].unique().tolist()))
 
             _chart_hbar(px.bar(
-                data_frame=cidades_por_comp,
+                data_frame=df[df['Airline'] == comp]['DestCityName'].value_counts(ascending=True).head(10),
                 labels={'DestCityName': 'Cidade', 'count': f'Voos da "{comp}" com destino a esta cidade'},
-                x='count', y='DestCityName',
+                x='count',
                 orientation='h', color_discrete_sequence=[COLORS['number']],
             ))
 
         if metricas['voos_vs_delay_city']:
             st.subheader('Relação entre número de voos e atraso médio por cidade de destino')
 
-            df_voos_delay_cidade = df.group_by('DestCityName').agg(
-                pl.col('ArrDelay').mean().alias('AtrasoMedio'),
-                pl.len().alias('NumVoos') # pl.len() conta o número de linhas no grupo.
-            )
+            df_voos_delay_cidade = df.groupby('DestCityName').agg({
+                'ArrDelay': 'mean',
+                'Airline': 'count'
+            }).rename(columns={
+                'ArrDelay': 'AtrasoMedio',
+                'Airline': 'NumVoos'
+            }).reset_index()
 
-            df_voos_delay_cidade_top = df_voos_delay_cidade.top_k(15, by='NumVoos')
+            df_voos_delay_cidade_top = df_voos_delay_cidade.nlargest(15, 'NumVoos')
 
-            fig = px.scatter(
+            _chart_hbar(px.scatter(
                 df_voos_delay_cidade_top,
                 x='NumVoos',
                 y='AtrasoMedio',
@@ -264,18 +241,20 @@ match opcao:
                     'DestCityName': 'Cidade de destino'
                 },
                 title='Relação entre número de voos e atraso médio por cidade'
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            ))
 
         if metricas['city-delay']:
             st.subheader('Top 10 cidades com maiores atrasos médios de chegada')
 
-            df_city_delay = (df.group_by('DestCityName')
-                            .agg(pl.col('ArrDelay').mean().alias('AtrasoMedio'))
-                            .top_k(10, by='AtrasoMedio'))
+            df_city_delay = (df.groupby('DestCityName')['ArrDelay']
+                            .mean()
+                            .sort_values(ascending=False)
+                            .head(10)
+                            .reset_index()
+                            .rename(columns={'ArrDelay': 'AtrasoMedio'}))
 
             _chart_hbar(px.bar(
-                data_frame=df_city_delay.sort(by='AtrasoMedio'),  # menor para cima
+                data_frame=df_city_delay.sort_values(by='AtrasoMedio'),  # menor para cima
                 x='AtrasoMedio',
                 y='DestCityName',
                 orientation='h',
@@ -295,11 +274,10 @@ match opcao:
         with cols[1]:
             metrica = st.radio('Métrica:', options=['Voos', 'Atrasos', 'Cancelamentos'])
 
-        df_filtrado = df # Começamos com uma cópia para aplicar filtros
 
         key = {
             'Ano': 'Month',
-            'Mês': 'DayOfMonth', # Atenção: o nome da coluna no dataset original era 'DayOfMonth'
+            'Mês': 'DayOfMonth',
             'Semana': 'DayOfWeek',
             'Dia': 'HourBlock',
         }[scale]
@@ -311,50 +289,41 @@ match opcao:
             'Dia': 'Bloco de hora',
         }[scale]
 
+
         if scale == 'Mês':
             with st.columns([0.5, 0.5])[0]:
                 month = st.selectbox('Mês do ano:', options=['Todos', *range(1,13)])
             if month != 'Todos':
-                # Polars: Filtragem com a sintaxe de expressão
-                df_filtrado = df_filtrado.filter(pl.col('Month') == month)
+                df = df[df['Month'] == month]
 
-        if scale == 'Dia':
-            # Polars: Criando a coluna HourBlock com with_columns
-            df_filtrado = df_filtrado.with_columns(
-                (pl.col('ArrTime') // 100).alias('HourBlock')
-            )
+        if scale == 'Dia': df['HourBlock'] = df['ArrTime'] // 100
 
         if metrica == 'Cancelamentos':
-            df_filtrado = df_filtrado.filter(pl.col('Cancelled') == True)
+            df = df[df['Cancelled'] == True]
 
-        # Polars: O groupby é aplicado no dataframe já filtrado
-        gb = df_filtrado.group_by(key)
+        gb = df.groupby(key)
 
         match metrica:
             case 'Voos':
                 st.subheader(f'Número total de voos por {label}')
-                # Polars: pl.len() ou .count() no agg para contar
-                dados_plot = gb.agg(pl.len().alias('count'))
                 _chart_bar(px.bar(
-                    data_frame=dados_plot,
+                    data_frame=gb.size().reset_index(name='count'),
                     labels={key: label, 'count': 'Número de voos'},
                     x=key, y='count',
                     color_discrete_sequence=[COLORS['number']]
                 ))
             case 'Atrasos':
                 st.subheader(f'Atraso de chegada médio por {label}')
-                dados_plot = gb.agg(pl.col('ArrDelay').mean().alias('count'))
                 _chart_bar(px.bar(
-                    data_frame=dados_plot,
+                    data_frame=gb['ArrDelay'].mean().reset_index(name='count'),
                     labels={key: label, 'count': 'Tempo médio de atraso [min]'},
                     x=key, y='count',
                     color_discrete_sequence=[COLORS['delay']]
                 ))
             case 'Cancelamentos':
                 st.subheader(f'Número total de cancelamentos por {label}')
-                dados_plot = gb.agg(pl.len().alias('count'))
                 _chart_bar(px.bar(
-                    data_frame=dados_plot,
+                    data_frame=gb.size().reset_index(name='count'),
                     labels={key: label, 'count': 'Número de cancelamentos'},
                     x=key, y='count',
                     color_discrete_sequence=[COLORS['cancel']]
