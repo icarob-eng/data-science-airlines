@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 from plotly import express as px
 import os
-from kaggle.api.kaggle_api_extended import KaggleApi
-
 
 COLORS = {
     'number': "#AEC6CF",
@@ -47,6 +45,9 @@ def carregar_dados(path):
 
         os.environ['KAGGLE_USERNAME'] = st.secrets["kaggle_username"]
         os.environ['KAGGLE_KEY'] = st.secrets["kaggle_key"]
+
+        from kaggle.api.kaggle_api_extended import KaggleApi
+
         api = KaggleApi()
         api.authenticate()
 
