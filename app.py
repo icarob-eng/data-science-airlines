@@ -53,6 +53,8 @@ def carregar_dados(path):
 
         api.dataset_download_file(dataset, path='data', file_name=file)
 
+        print(os.listdir('data'))
+
         df_raw = pd.read_parquet(path)
 
     # Se necessário, selecione apenas as colunas desejadas
