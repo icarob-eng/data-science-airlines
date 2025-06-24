@@ -38,6 +38,7 @@ parquet_path = 'data/Combined_Flights_2019.parquet'
 
 @st.cache_data
 def carregar_dados(path):
+    os.makedirs('data', exist_ok=True)
     try:
         df_raw = pd.read_parquet(path)
     except Exception:
@@ -49,7 +50,7 @@ def carregar_dados(path):
         api = KaggleApi()
         api.authenticate()
 
-        api.dataset_download_file(dataset, path='data/', file_name=file)
+        api.dataset_download_file(dataset, path='data', file_name=file)
 
         df_raw = pd.read_parquet(path)
 
