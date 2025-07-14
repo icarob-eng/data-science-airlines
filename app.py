@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from plotly import express as px
+import joblib
 import zipfile
 import os
 
@@ -29,7 +30,8 @@ opcao = st.sidebar.radio("Selecione um tópico de análise:", [
     "Visão Geral",
     "Por linhas aéreas",
     "Geográfica",
-    "Temporal"
+    "Temporal",
+    "Classificação de Atraso"
 ])
 
 # --- Carregar dados ---
@@ -328,3 +330,36 @@ match opcao:
                     x=key, y='count',
                     color_discrete_sequence=[COLORS['cancel']]
                 ))
+    case "Classificação de Atraso":
+        st.subheader("Previsão de Atraso de Voo")
+
+        # Carregar modelo e transformadores
+        modelo = joblib.load("modelo/classificador_voos.pkl")
+        scaler = joblib.load("modelo/scaler_classificacao.pkl")
+        encoder = joblib.load("modelo/encoder_airline_classificacao.pkl")
+        colunas_usadas = joblib.load("modelo/colunas_usadas.pkl")
+
+        # Formulário de entrada
+        with st.form("form_previsao"):
+            airline = st.selectbox("Companhia Aérea:", sorted(encoder.classes_.tolist()))
+            distance = st.number_input("Distância (milhas):", min_value=50, max_value=5000, value=500)
+            month = st.selectbox("Mês do Voo:", list(range(1, 13)))
+            submitted = st.form_submit_button("Prever Atraso")
+
+        if submitted:
+            # Preparar dados para previsão
+            dados = pd.DataFrame({
+                "Airline": [airline],
+                "Distance": [distance],
+                "Month": [month]
+            })
+
+            # Codificação e normalização
+            dados["Airline"] = encoder.transform(dados["Airline"])
+            X_novo = dados[colunas_usadas]
+            X_novo_scaled = scaler.transform(X_novo)
+
+            # Previsão
+            predicao = modelo.predict(X_novo_scaled)
+            resultado = "🔴 Atraso previsto" if predicao[0] == 1 else "🟢 Sem atraso previsto"
+            st.success(f"Resultado da Previsão: {resultado}")
