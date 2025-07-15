@@ -1,0 +1,101 @@
+,Airline,Cancelled,ArrDelay,OriginCityName,DestCityName,Distance,Month,DayOfMonth,DayOfWeek,ArrTime
+666070,Frontier Airlines Inc.,False,17.0,"Orlando, FL","Indianapolis, IN",829.0,4,24,3,1645.0
+517782,Southwest Airlines Co.,False,9.0,"Norfolk, VA","Chicago, IL",704.0,3,18,1,1829.0
+581975,Delta Air Lines Inc.,False,9.0,"Atlanta, GA","San Francisco, CA",2139.0,1,24,4,1323.0
+432472,Southwest Airlines Co.,False,-2.0,"Orlando, FL","Pittsburgh, PA",834.0,7,12,5,1258.0
+337090,Mesa Airlines Inc.,False,18.0,"Washington, DC","Greer, SC",384.0,10,5,6,1442.0
+282499,SkyWest Airlines Inc.,False,-8.0,"Chicago, IL","Oklahoma City, OK",693.0,3,27,3,2046.0
+66507,Endeavor Air Inc.,False,-8.0,"New York, NY","Buffalo, NY",292.0,4,30,2,1723.0
+96783,Republic Airlines,False,-16.0,"Atlanta, GA","Washington, DC",547.0,7,17,3,743.0
+18283,Southwest Airlines Co.,False,-17.0,"Tulsa, OK","St. Louis, MO",351.0,11,10,7,1823.0
+471130,JetBlue Airways,False,-20.0,"Newark, NJ","Boston, MA",200.0,9,12,4,1323.0
+467494,SkyWest Airlines Inc.,False,72.0,"Milwaukee, WI","Houston, TX",984.0,5,2,4,1210.0
+246189,Southwest Airlines Co.,False,-17.0,"Providence, RI","Orlando, FL",1072.0,1,17,4,1608.0
+302776,Southwest Airlines Co.,False,-4.0,"Chicago, IL","Detroit, MI",228.0,1,14,1,2326.0
+110105,Southwest Airlines Co.,False,15.0,"Kahului, HI","Oakland, CA",2349.0,6,25,2,2200.0
+562474,Republic Airlines,False,8.0,"Boston, MA","New York, NY",184.0,4,16,2,1434.0
+631111,Delta Air Lines Inc.,False,-21.0,"Greer, SC","Atlanta, GA",153.0,4,12,5,1325.0
+7006,American Airlines Inc.,False,-1.0,"Dallas/Fort Worth, TX","Austin, TX",190.0,3,2,6,1048.0
+625849,JetBlue Airways,False,-15.0,"New York, NY","Seattle, WA",2422.0,3,22,5,1144.0
+469664,Southwest Airlines Co.,False,-3.0,"Oakland, CA","Salt Lake City, UT",588.0,3,29,5,1257.0
+203788,American Airlines Inc.,False,-9.0,"El Paso, TX","Dallas/Fort Worth, TX",551.0,5,10,5,1704.0
+80611,Southwest Airlines Co.,True,0.0,"Atlanta, GA","Chicago, IL",591.0,11,26,2,0.0
+263520,American Airlines Inc.,False,53.0,"San Francisco, CA","Charlotte, NC",2296.0,5,30,4,2232.0
+337772,American Airlines Inc.,False,-17.0,"Baltimore, MD","Charlotte, NC",361.0,12,12,4,1147.0
+153751,Delta Air Lines Inc.,False,-5.0,"Sarasota/Bradenton, FL","Atlanta, GA",444.0,10,20,7,1302.0
+598565,Hawaiian Airlines Inc.,False,-3.0,"Honolulu, HI","Kahului, HI",100.0,6,13,4,1332.0
+29457,SkyWest Airlines Inc.,False,-21.0,"Grand Rapids, MI","Detroit, MI",120.0,6,21,5,2004.0
+588661,United Air Lines Inc.,False,6.0,"Miami, FL","Newark, NJ",1085.0,9,28,6,1615.0
+678437,Mesa Airlines Inc.,False,-2.0,"Houston, TX","Kansas City, MO",643.0,3,30,6,1000.0
+13092,American Airlines Inc.,False,-12.0,"Chicago, IL","Charlotte, NC",599.0,3,26,2,1010.0
+29097,SkyWest Airlines Inc.,False,-23.0,"Denver, CO","San Jose, CA",948.0,1,14,1,1650.0
+115107,Republic Airlines,False,2.0,"Washington, DC","Raleigh/Durham, NC",227.0,2,7,4,1010.0
+101667,Horizon Air,False,-12.0,"San Francisco, CA","Santa Ana, CA",372.0,10,3,4,1133.0
+48922,Southwest Airlines Co.,False,-25.0,"Orlando, FL","Providence, RI",1072.0,11,12,2,2255.0
+122053,Republic Airlines,False,-8.0,"Charlotte, NC","New Orleans, LA",651.0,2,14,4,2347.0
+89262,Southwest Airlines Co.,False,-8.0,"Santa Ana, CA","Las Vegas, NV",226.0,5,7,2,822.0
+424830,Republic Airlines,False,28.0,"Washington, DC","New York, NY",214.0,1,18,5,2058.0
+416582,Endeavor Air Inc.,False,-18.0,"Cincinnati, OH","Newark, NJ",569.0,3,13,3,1914.0
+56594,SkyWest Airlines Inc.,False,-18.0,"Salt Lake City, UT","Houston, TX",1195.0,1,19,6,1322.0
+139749,Alaska Airlines Inc.,False,-22.0,"Anchorage, AK","Bethel, AK",399.0,11,14,4,1941.0
+562871,SkyWest Airlines Inc.,False,65.0,"Detroit, MI","Saginaw/Bay City/Midland, MI",98.0,10,13,7,30.0
+649753,American Airlines Inc.,False,-18.0,"Philadelphia, PA","Charlotte, NC",449.0,10,19,6,804.0
+618865,United Air Lines Inc.,False,61.0,"Washington, DC","Orlando, FL",758.0,9,11,3,2058.0
+607210,American Airlines Inc.,False,-21.0,"Chicago, IL","Miami, FL",1197.0,10,13,7,1839.0
+301324,Mesa Airlines Inc.,False,10.0,"Tucson, AZ","Phoenix, AZ",110.0,8,9,5,920.0
+387761,American Airlines Inc.,False,-3.0,"Dallas/Fort Worth, TX","Denver, CO",641.0,11,14,4,1744.0
+569866,Republic Airlines,False,0.0,"Manchester, NH","Washington, DC",406.0,6,13,4,1359.0
+98484,Alaska Airlines Inc.,False,-24.0,"Juneau, AK","Seattle, WA",909.0,10,8,2,1106.0
+602084,Comair Inc.,False,-4.0,"Allentown/Bethlehem/Easton, PA","Charlotte, NC",481.0,3,26,2,1340.0
+664679,JetBlue Airways,False,-26.0,"Orlando, FL","New York, NY",944.0,5,9,4,813.0
+547285,Delta Air Lines Inc.,False,-16.0,"Norfolk, VA","Atlanta, GA",516.0,1,30,3,1400.0
+633859,Southwest Airlines Co.,False,-10.0,"Nashville, TN","Phoenix, AZ",1449.0,12,19,4,1020.0
+186216,American Airlines Inc.,False,10.0,"Charlotte, NC","Wilmington, NC",185.0,1,4,5,1047.0
+172290,United Air Lines Inc.,False,-9.0,"Raleigh/Durham, NC","Washington, DC",224.0,7,17,3,709.0
+635372,Delta Air Lines Inc.,False,33.0,"Detroit, MI","Dallas/Fort Worth, TX",986.0,4,14,7,1101.0
+63900,SkyWest Airlines Inc.,False,-36.0,"Fort Smith, AR","Atlanta, GA",579.0,6,25,2,906.0
+670852,Comair Inc.,False,-4.0,"Dayton, OH","Charlotte, NC",370.0,7,12,5,700.0
+497917,Spirit Air Lines,False,28.0,"Chicago, IL","Boston, MA",867.0,10,28,1,1816.0
+63239,Comair Inc.,False,36.0,"Charlotte, NC","Asheville, NC",91.0,10,21,1,1113.0
+538296,Southwest Airlines Co.,False,-9.0,"Oakland, CA","Burbank, CA",325.0,7,26,5,1521.0
+31753,American Airlines Inc.,False,20.0,"Memphis, TN","Philadelphia, PA",875.0,12,10,2,952.0
+133943,SkyWest Airlines Inc.,False,16.0,"Chicago, IL","Akron, OH",343.0,9,23,1,1403.0
+443005,Alaska Airlines Inc.,False,1.0,"Los Angeles, CA","Las Vegas, NV",236.0,4,4,4,1346.0
+602391,"GoJet Airlines, LLC d/b/a United Express",False,17.0,"Detroit, MI","Buffalo, NY",241.0,1,15,2,1735.0
+292154,Frontier Airlines Inc.,False,-28.0,"Los Angeles, CA","Denver, CO",862.0,3,20,3,400.0
+705524,SkyWest Airlines Inc.,False,-21.0,"Wichita, KS","Chicago, IL",588.0,8,30,5,1919.0
+506069,Air Wisconsin Airlines Corp,True,0.0,"Des Moines, IA","Chicago, IL",299.0,1,19,6,0.0
+682057,Capital Cargo International,False,5.0,"Philadelphia, PA","Wilmington, NC",413.0,10,26,6,1239.0
+290063,Delta Air Lines Inc.,False,-45.0,"Albany, NY","Atlanta, GA",853.0,12,26,4,805.0
+507166,Spirit Air Lines,False,-21.0,"Las Vegas, NV","Dallas/Fort Worth, TX",1055.0,10,27,7,1243.0
+576530,Delta Air Lines Inc.,False,31.0,"Minneapolis, MN","New York, NY",1020.0,4,15,1,2200.0
+236974,American Airlines Inc.,False,-30.0,"Los Angeles, CA","Orlando, FL",2218.0,6,23,7,2312.0
+428680,Southwest Airlines Co.,False,-9.0,"Chicago, IL","Oklahoma City, OK",691.0,7,11,4,1536.0
+575693,Endeavor Air Inc.,False,-32.0,"St. Louis, MO","New York, NY",888.0,2,7,4,930.0
+320265,Envoy Air,False,-18.0,"Dallas/Fort Worth, TX","Tallahassee, FL",767.0,6,14,5,1719.0
+443525,Envoy Air,False,-27.0,"Fort Wayne, IN","Chicago, IL",157.0,9,11,3,1718.0
+28062,American Airlines Inc.,False,-17.0,"Philadelphia, PA","Orlando, FL",861.0,3,28,4,1301.0
+86799,Republic Airlines,False,12.0,"Rochester, NY","New York, NY",254.0,12,23,1,731.0
+514616,Southwest Airlines Co.,False,-12.0,"Kansas City, MO","Dallas, TX",460.0,2,25,1,1953.0
+212870,JetBlue Airways,False,112.0,"New York, NY","Syracuse, NY",209.0,12,2,1,936.0
+73014,Hawaiian Airlines Inc.,False,-4.0,"Sacramento, CA","Honolulu, HI",2462.0,4,20,6,1021.0
+64713,JetBlue Airways,False,-25.0,"Buffalo, NY","New York, NY",301.0,7,1,1,634.0
+500197,Air Wisconsin Airlines Corp,True,0.0,"Moline, IL","Chicago, IL",139.0,1,28,1,0.0
+93445,Southwest Airlines Co.,False,3.0,"Albuquerque, NM","Phoenix, AZ",328.0,5,15,3,1708.0
+94794,Republic Airlines,False,1.0,"Nashville, TN","Charlotte, NC",328.0,7,2,2,1701.0
+375652,Trans States Airlines,False,-8.0,"Sioux Falls, SD","Denver, CO",483.0,7,2,2,833.0
+18491,SkyWest Airlines Inc.,True,0.0,"Flint, MI","Chicago, IL",223.0,1,28,1,0.0
+648867,Spirit Air Lines,False,26.0,"Orlando, FL","Las Vegas, NV",2039.0,6,18,2,2030.0
+568325,"GoJet Airlines, LLC d/b/a United Express",False,-29.0,"Chicago, IL","Tulsa, OK",585.0,12,23,1,1144.0
+344545,Endeavor Air Inc.,False,-41.0,"New York, NY","Savannah, GA",718.0,12,4,3,1642.0
+201729,American Airlines Inc.,False,-21.0,"Charlotte, NC","Los Angeles, CA",2125.0,6,28,5,1830.0
+418615,SkyWest Airlines Inc.,False,2.0,"Des Moines, IA","Denver, CO",589.0,12,17,2,1230.0
+228160,American Airlines Inc.,False,-11.0,"Chicago, IL","San Diego, CA",1723.0,5,15,3,1210.0
+239864,American Airlines Inc.,False,4.0,"Santa Ana, CA","Chicago, IL",1726.0,6,24,1,1658.0
+190321,American Airlines Inc.,False,-10.0,"Dallas/Fort Worth, TX","Milwaukee, WI",853.0,5,28,2,1632.0
+187023,American Airlines Inc.,False,-18.0,"Washington, DC","Boston, MA",399.0,1,31,4,1335.0
+284218,American Airlines Inc.,False,-19.0,"Chicago, IL","Dallas/Fort Worth, TX",801.0,4,9,2,18.0
+315796,Delta Air Lines Inc.,False,-31.0,"Detroit, MI","Charlotte, NC",500.0,12,8,7,1122.0
+312801,United Air Lines Inc.,False,-16.0,"San Francisco, CA","Kahului, HI",2338.0,3,29,5,1348.0
+561008,Frontier Airlines Inc.,False,-10.0,"Cincinnati, OH","Fort Lauderdale, FL",932.0,11,1,5,1708.0
+129491,United Air Lines Inc.,False,4.0,"Newark, NJ","Chicago, IL",719.0,7,14,7,909.0
