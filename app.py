@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 from plotly import express as px
 import joblib
-import zipfile
-import os
 
 COLORS = {
     'number': "#AEC6CF",
@@ -30,17 +28,14 @@ opcao = st.sidebar.radio("Selecione um tópico de análise:", [
     "Visão Geral",
     "Por linhas aéreas",
     "Geográfica",
-    "Temporal",
+    # "Temporal",
     "Classificação de Atraso"
 ])
-
-# --- Carregar dados ---
-parquet_path = 'data/reduced_Combined_Flights_2019.parquet'
 
 @st.cache_data
 def carregar_dados(path):
     try:
-        return pd.read_parquet(path)
+        return pd.read_csv(path)
     except Exception:
         return st.error("Erro ao carregar dados.")
 
@@ -66,24 +61,26 @@ def _chart_bar(fig):
     )
     st.plotly_chart(fig)
 
-
-df = carregar_dados(parquet_path)
-
 # --- Exibir visualizações conforme opção escolhida ---
 match opcao:
     case "Visão Geral":
         st.subheader("Visão Geral do Dataset")
 
         st.text('Dataset em números:')
+
+        dados_gerais = carregar_dados('tables/metricas_gerais.csv')
+
         cols = st.columns(3)
         with cols[0]:
-            st.metric('Linhas aéreas', len(df['Airline'].unique()), border=True)
+            st.metric('Linhas aéreas', dados_gerais.Values[0], border=True)
         with cols[1]:
-            st.metric('Cidades', len(df['DestCityName'].unique()), border=True)
+            st.metric('Cidades', dados_gerais.Values[1], border=True)
         with cols[2]:
-            st.metric('Total de voos', format_number(len(df)), border=True)
+            st.metric('Total de voos', format_number(dados_gerais.Values[2]), border=True)
 
         st.text('10 voos aleatórios:')
+
+        df = carregar_dados('tables/100samples.csv')
         st.dataframe(df.sample(10))
         st.write(df.describe())
 
@@ -98,8 +95,7 @@ match opcao:
             'voos_vs_delay': st.sidebar.checkbox('Atraso médio vs N° de voos')
         }
 
-        voos_por_companhia = df['Airline'].value_counts().reset_index().rename(
-            columns={'count': 'TotalVoos'}).sort_values('TotalVoos')
+        voos_por_companhia = carregar_dados('tables/voos_por_companhia.csv')
 
         if metricas['num']:
             st.subheader('Ranking de companhias aéreas:')
@@ -113,7 +109,7 @@ match opcao:
             st.subheader('Companhias aéreas com rotas mais longas:')
 
             _chart_hbar(px.bar(
-                data_frame=df.groupby('Airline')['Distance'].mean().sort_values(),
+                data_frame=carregar_dados('tables/dist_por_comp.csv'),
                 labels={'Airline': 'Linha aérea', 'Distance': 'Distância média [milhas]'},
                 x='Distance',
                 orientation='h', color_discrete_sequence=[COLORS['dist']],
@@ -122,7 +118,7 @@ match opcao:
             st.subheader('Atraso médio de chegada por companhia:')
 
             _chart_hbar(px.bar(
-                data_frame=df.groupby('Airline')['ArrDelay'].mean().sort_values(),
+                data_frame=carregar_dados('tables/atrasi_por_comp.csv'),
                 labels={'Airline': 'Linha aérea', 'ArrDelay': 'Atraso médio [min]'},
                 x='ArrDelay',
                 orientation='h', color_discrete_sequence=[COLORS['delay']],
@@ -130,12 +126,7 @@ match opcao:
         if metricas['cancel']:
             st.subheader('Companhias aéreas que mais cancelam:')
 
-            cancel_counts = (df[df['Cancelled'] == True]['Airline']
-                             .value_counts()
-                             .reset_index()
-                             .rename(columns={'count': 'VoosCancelados'}))
-            cancel_counts['VoosCanceladosPct'] = cancel_counts['VoosCancelados'] / \
-                                                             voos_por_companhia['TotalVoos'] * 100
+            cancel_counts = carregar_dados('tables/cancel_counts.csv')
 
             cols = st.columns(2)
             with cols[0]:
@@ -154,11 +145,7 @@ match opcao:
         if metricas['voos_vs_delay']:
             st.subheader('Atraso médio com relação ao número de voos (Top 10 companhias)')
 
-            df_voos_delay = df.groupby('Airline').agg({
-                'ArrDelay': 'mean'
-            }).rename(columns={'ArrDelay': 'AtrasoMedio'}).reset_index()
-
-            df_voos_delay['NumVoos'] = df['Airline'].value_counts().reindex(df_voos_delay['Airline']).values
+            df_voos_delay = carregar_dados('tables/voos_delay.csv')
 
             df_voos_delay_top10 = df_voos_delay.nlargest(10, 'NumVoos')
 
@@ -193,14 +180,9 @@ match opcao:
 
         if metricas['faixas']:
             st.subheader('O atraso dos voos depende da distância?')
-            bins = [0, 250, 500, 750, 1000, 1250, 1500, 2000, 3000, 4000, 5000]
-            labels = ['0–250', '251–500', '501–750', '751–1000', '1001–1250', '1251–1500',
-                      '1501–2000', '2001–3000', '3001–4000', '4001–5000']
-
-            df['FaixaDistancia'] = pd.cut(df['Distance'], bins=bins, labels=labels)
 
             _chart_bar(px.bar(
-                data_frame=df.groupby('FaixaDistancia', observed=False)['ArrDelay'].mean().reset_index(),
+                data_frame=carregar_dados('tables/atrasos_por_faixa.csv'),
                 labels={'FaixaDistancia': 'Faixa de distância [milhas]', 'ArrDelay': 'Atraso de chegada [min]'},
                 x='FaixaDistancia', y='ArrDelay', color_discrete_sequence=[COLORS['delay']],
             ))
@@ -208,10 +190,12 @@ match opcao:
 
         if metricas['cidades-companhias']:
             st.subheader('Top 10 cidades destino por companhia')
-            comp = st.selectbox('Companhia:', options=sorted(df['Airline'].unique().tolist()))
+
+            voos_por_companhia = carregar_dados('tables/voos_por_companhia.csv')
+            comp = st.selectbox('Companhia:', options=sorted(voos_por_companhia['Airline']))
 
             _chart_hbar(px.bar(
-                data_frame=df[df['Airline'] == comp]['DestCityName'].value_counts(ascending=True).head(10),
+                data_frame=carregar_dados(f'tables/comps/{comp.split(' ')[0]}_destinos.csv'),
                 labels={'DestCityName': 'Cidade', 'count': f'Voos da "{comp}" com destino a esta cidade'},
                 x='count',
                 orientation='h', color_discrete_sequence=[COLORS['number']],
@@ -220,13 +204,7 @@ match opcao:
         if metricas['voos_vs_delay_city']:
             st.subheader('Relação entre número de voos e atraso médio por cidade de destino')
 
-            df_voos_delay_cidade = df.groupby('DestCityName').agg({
-                'ArrDelay': 'mean',
-                'Airline': 'count'
-            }).rename(columns={
-                'ArrDelay': 'AtrasoMedio',
-                'Airline': 'NumVoos'
-            }).reset_index()
+            df_voos_delay_cidade = carregar_dados('tables/atrasos_por_cidade.csv')
 
             df_voos_delay_cidade_top = df_voos_delay_cidade.nlargest(15, 'NumVoos')
 
@@ -248,12 +226,7 @@ match opcao:
         if metricas['city-delay']:
             st.subheader('Top 10 cidades com maiores atrasos médios de chegada')
 
-            df_city_delay = (df.groupby('DestCityName')['ArrDelay']
-                            .mean()
-                            .sort_values(ascending=False)
-                            .head(10)
-                            .reset_index()
-                            .rename(columns={'ArrDelay': 'AtrasoMedio'}))
+            df_city_delay = carregar_dados('tables/city_delay.csv')
 
             _chart_hbar(px.bar(
                 data_frame=df_city_delay.sort_values(by='AtrasoMedio'),  # menor para cima
@@ -267,69 +240,68 @@ match opcao:
                 },
                 title='Top 10 cidades com maiores atrasos médios'
             ))
-
-    case 'Temporal':
-        st.subheader('Análise temporal')
-        cols = st.columns(2)
-        with cols[0]:
-            scale = st.select_slider('Escala temporal:', options=['Ano', 'Mês', 'Semana', 'Dia'])
-        with cols[1]:
-            metrica = st.radio('Métrica:', options=['Voos', 'Atrasos', 'Cancelamentos'])
-
-
-        key = {
-            'Ano': 'Month',
-            'Mês': 'DayOfMonth',
-            'Semana': 'DayOfWeek',
-            'Dia': 'HourBlock',
-        }[scale]
-
-        label = {
-            'Ano': 'Mês',
-            'Mês': 'Dia do mês',
-            'Semana': 'Dia da semana',
-            'Dia': 'Bloco de hora',
-        }[scale]
-
-
-        if scale == 'Mês':
-            with st.columns([0.5, 0.5])[0]:
-                month = st.selectbox('Mês do ano:', options=['Todos', *range(1,13)])
-            if month != 'Todos':
-                df = df[df['Month'] == month]
-
-        if scale == 'Dia': df['HourBlock'] = df['ArrTime'] // 100
-
-        if metrica == 'Cancelamentos':
-            df = df[df['Cancelled'] == True]
-
-        gb = df.groupby(key)
-
-        match metrica:
-            case 'Voos':
-                st.subheader(f'Número total de voos por {label}')
-                _chart_bar(px.bar(
-                    data_frame=gb.size().reset_index(name='count'),
-                    labels={key: label, 'count': 'Número de voos'},
-                    x=key, y='count',
-                    color_discrete_sequence=[COLORS['number']]
-                ))
-            case 'Atrasos':
-                st.subheader(f'Atraso de chegada médio por {label}')
-                _chart_bar(px.bar(
-                    data_frame=gb['ArrDelay'].mean().reset_index(name='count'),
-                    labels={key: label, 'count': 'Tempo médio de atraso [min]'},
-                    x=key, y='count',
-                    color_discrete_sequence=[COLORS['delay']]
-                ))
-            case 'Cancelamentos':
-                st.subheader(f'Número total de cancelamentos por {label}')
-                _chart_bar(px.bar(
-                    data_frame=gb.size().reset_index(name='count'),
-                    labels={key: label, 'count': 'Número de cancelamentos'},
-                    x=key, y='count',
-                    color_discrete_sequence=[COLORS['cancel']]
-                ))
+    # case 'Temporal':
+    #     st.subheader('Análise temporal')
+    #     cols = st.columns(2)
+    #     with cols[0]:
+    #         scale = st.select_slider('Escala temporal:', options=['Ano', 'Mês', 'Semana', 'Dia'])
+    #     with cols[1]:
+    #         metrica = st.radio('Métrica:', options=['Voos', 'Atrasos', 'Cancelamentos'])
+    #
+    #
+    #     key = {
+    #         'Ano': 'Month',
+    #         'Mês': 'DayOfMonth',
+    #         'Semana': 'DayOfWeek',
+    #         'Dia': 'HourBlock',
+    #     }[scale]
+    #
+    #     label = {
+    #         'Ano': 'Mês',
+    #         'Mês': 'Dia do mês',
+    #         'Semana': 'Dia da semana',
+    #         'Dia': 'Bloco de hora',
+    #     }[scale]
+    #
+    #
+    #     if scale == 'Mês':
+    #         with st.columns([0.5, 0.5])[0]:
+    #             month = st.selectbox('Mês do ano:', options=['Todos', *range(1,13)])
+    #         if month != 'Todos':
+    #             df = df[df['Month'] == month]
+    #
+    #     if scale == 'Dia': df['HourBlock'] = df['ArrTime'] // 100
+    #
+    #     if metrica == 'Cancelamentos':
+    #         df = df[df['Cancelled'] == True]
+    #
+    #     gb = df.groupby(key)
+    #
+    #     match metrica:
+    #         case 'Voos':
+    #             st.subheader(f'Número total de voos por {label}')
+    #             _chart_bar(px.bar(
+    #                 data_frame=gb.size().reset_index(name='count'),
+    #                 labels={key: label, 'count': 'Número de voos'},
+    #                 x=key, y='count',
+    #                 color_discrete_sequence=[COLORS['number']]
+    #             ))
+    #         case 'Atrasos':
+    #             st.subheader(f'Atraso de chegada médio por {label}')
+    #             _chart_bar(px.bar(
+    #                 data_frame=gb['ArrDelay'].mean().reset_index(name='count'),
+    #                 labels={key: label, 'count': 'Tempo médio de atraso [min]'},
+    #                 x=key, y='count',
+    #                 color_discrete_sequence=[COLORS['delay']]
+    #             ))
+    #         case 'Cancelamentos':
+    #             st.subheader(f'Número total de cancelamentos por {label}')
+    #             _chart_bar(px.bar(
+    #                 data_frame=gb.size().reset_index(name='count'),
+    #                 labels={key: label, 'count': 'Número de cancelamentos'},
+    #                 x=key, y='count',
+    #                 color_discrete_sequence=[COLORS['cancel']]
+    #             ))
     case "Classificação de Atraso":
         st.subheader("Previsão de Atraso de Voo")
 
